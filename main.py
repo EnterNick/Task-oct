@@ -1,6 +1,8 @@
 import pymorphy3
 import pprint
 import os
+import re
+from nltk.tokenize import sent_tokenize
 from variables import *
 
 os.system('cls')
@@ -15,15 +17,25 @@ def similary(word, word2):
     return round(similarity, 2)
 
 
+def text_parser(text):
+    text = sent_tokenize(text)
+    text1 = text.copy()
+    text.clear()
+    for i in text1:
+        text.append(re.sub(r'\s+', ' ', re.sub(r'[^\w\s]', ' ', i)))
+    return text
+
+
 def find(text, substring):
     s = []
     analizator = pymorphy3.MorphAnalyzer()
-    substring = substring.lower()
-    for i in text.split():
-        word = analizator.parse(i.lower())[0].normal_form
-        if ((sim:=similary(word, substring) + similary(i.lower(), substring)) > 2):
-            s.append((i, sim))
+    substring = substring.lower().strip()
+    for sentense in text:
+        for one_word in sentense.split():
+            word = analizator.parse(one_word.lower())[0].normal_form
+            if ((sim:=similary(word, substring) + similary(one_word.lower(), substring)) > 2):
+                s.append((one_word, sim, sentense))
     return sorted(s, key=lambda x: x[1])
 
 
-pprint.pprint(find(text, 'мир')[-10:])
+pprint.pprint(find(text_parser(text), 'ВЕТЕР')[-10:])
