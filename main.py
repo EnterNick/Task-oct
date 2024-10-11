@@ -7,11 +7,13 @@ from variables import *
 os.system('cls')
 
 
-def module(n: int):
+def module(n: int) -> int:
+    '''Returns the modulus of the number "n".'''
     return n if n >= 0 else -n
 
 
-def similary(words, analyzer, register, inaccurances):
+def similary(words: tuple, analyzer: pymorphy3.MorphAnalyzer, register: bool, inaccurances: bool) -> float:
+    '''Returns an indicator of the similarity of words or sentences (may be case-insensitive or search for misspelled words).'''
     similarity = 0
     if register:
         words = (words[0].lower(), words[1].lower())
@@ -26,22 +28,29 @@ def similary(words, analyzer, register, inaccurances):
     return round(similarity, 2)
 
 
-def text_parser(text):
+def text_parser(text: list[str]) -> list[str]:
+    '''Delets "\\n", punctuation marks and repeated spaces in list of sentenses'''
     text1 = []
     for i in text:
         text1.append(re.sub(r'\s+', ' ', re.sub(r'[^\w\s]', ' ', i)).replace('\n', ''))
     return text1
 
 
-def find(text: list[str], substring: str, register: bool=True, inaccuracies: bool=True):
+def find(text: list[str], substring: str, register: bool=True, inaccuracies: bool=True) -> list[tuple]:
+    '''Searches for similar words or sentenses in the list of sentences'''
     s = []
     analizator = pymorphy3.MorphAnalyzer()
-    substring = substring.strip()
+    substring = text_parser((substring.strip(),))[0]
     for i, sentense in enumerate(text):
-        for one_word in sentense.split():
-            if (sim:=similary((one_word, substring), analizator, register, inaccuracies)) > 1:
-                s.append((one_word, sim, i))
+        if ' ' in substring.strip():
+            if (sim:=similary((sentense, substring), analizator, register, inaccuracies)) > 1:
+                s.append((sentense, sim, i))
+        else:
+            for one_word in sentense.split():
+                if (sim:=similary((one_word, substring), analizator, register, inaccuracies)) > 1:
+                    s.append((one_word, sim, i))
     return sorted(s, key=lambda x: x[1])
+
 
 if __name__ == '__main__':
     text = sent_tokenize(text)
