@@ -1,11 +1,7 @@
-from bot.bot import bot_setup
-from data import db_session
-
-
-def main():
-    db_session.global_init(r'scr\db\users.sqlite')
-    bot_setup()
+from scr.bot.bot import bot_setup
+from scr.bot.data.db_session import global_init
 
 
 if __name__ == '__main__':
-    main()
+    global_init('scr/db/users.sqlite')
+    bot_setup()
