@@ -11,7 +11,7 @@ from aiogram.utils.markdown import hbold
 from scr.search.search import find
 
 from aiogram import Bot, Dispatcher, types, F
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import CommandStart
 from aiogram.types import Message
 
 from dotenv import load_dotenv
@@ -28,6 +28,9 @@ dp = Dispatcher()
 class Form(StatesGroup):
     state = State()
     save = State()
+    change = State()
+    save_changes = State()
+    input = State()
 
 
 @dp.message(F.text.lower() == 'смотреть текст')
@@ -40,6 +43,9 @@ async def command_get_text_handler(message: Message) -> None:
             all_texts.append(f'Файл №{i}:\n\n' + user.__getattribute__(f'text_{i}'))
     db_sess.commit()
     db_sess.close()
+    if not all_texts:
+        await message.answer('Сначала надо задать текст!')
+        return
     await message.answer('\n\n'.join(all_texts))
 
 
@@ -48,6 +54,7 @@ async def command_start_handler(message: Message) -> None:
     db_sess = create_session()
     if not db_sess.query(users.User).filter(users.User.telegram_id == message.from_user.id).all():
         user = users.User()
+        user.name = message.from_user.full_name
         user.telegram_id = message.from_user.id
         user.current_save = 'text_1'
         db_sess.add(user)
@@ -69,9 +76,43 @@ async def command_set_text_handler(message: Message, state: FSMContext) -> None:
     await message.answer('Какой сохранённый файл перезаписать?', reply_markup=change_text_keyboard().as_markup())
 
 
-# @dp.message(F.text.lower() == 'заменить')
-# async def command_set_text_handler(message: Message, state: FSMContext) -> None:
+@dp.message(F.text.lower() == 'заменить')
+async def command_change_handler(message: Message, state: FSMContext) -> None:
+    await state.clear()
+    await state.set_state(Form.change)
+    await message.answer('Введите слово, которое следует заменить: ')
 
+
+@dp.message(Form.change)
+async def change_text(message: Message, state: FSMContext):
+    await find_handler(message)
+    await message.answer('Введите номер файла и номер предложения через пробел, слово в которм надо заменить')
+    db_sess = create_session()
+    user = db_sess.query(users.User).filter(users.User.telegram_id == message.from_user.id).first()
+    user.replace_word = message.text
+    db_sess.commit()
+    db_sess.close()
+    await state.clear()
+    await state.set_state(Form.input)
+
+
+@dp.message(Form.input)
+async def input_change_text(message: Message, state: FSMContext):
+    db_sess = create_session()
+    user = db_sess.query(users.User).filter(users.User.telegram_id == message.from_user.id).first()
+    try:
+        n = [*map(int, message.text.split())]
+        if f'Файл №{n[0]}' not in user.last_result or f'предложение №{n[1]}' not in user.last_result:
+            raise Exception
+    except Exception:
+        await message.answer('Введите номер файла и номер предложения через пробел, слово в которм надо заменить')
+        db_sess.close()
+    await
+    text, deafult_text = text_parser(user.__getattribute__(f'text_{n[0]}'))
+    deafult_text[n[1]] = deafult_text[n[1]].replace(user.replace_word, )
+    user.__setattr__(f'text_{n[0]}', ''.join(deafult_text))
+    db_sess.commit()
+    db_sess.close()
 
 
 @dp.message(F.text.lower() == 'инфо')
@@ -103,7 +144,7 @@ async def text_parser(message: Message, state: FSMContext):
             text = text.read().decode()
         except Exception:
             await message.answer('К сожалению, я не могу прочитать файл такого формата.')
-    elif not message.text.strip():
+    elif not message.text or not message.text.strip():
         await message.answer('Ноебходимо ввести непустой текст!')
         return
     else:
@@ -158,9 +199,10 @@ async def find_handler(message: types.Message) -> None:
         if not all_finds:
             await message.answer('Сначала необходимо задать текст!')
             return
+        user.last_result = result = '\n\n'.join([f'Файл №{i + 1}:\n\n' + '\n'.join(all_finds[i])
+                                          for i in range(len(all_finds))])
         db_sess.close()
-        await message.answer('\n\n'.join([f'Файл №{i + 1}:\n\n' + '\n'.join(all_finds[i])
-                                          for i in range(len(all_finds))]))
+        await message.answer(result)
     else:
         await message.answer('Введите непустое сообщение!')
 

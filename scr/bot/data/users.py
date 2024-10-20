@@ -8,6 +8,7 @@ class User(SqlAlchemyBase):
     __tablename__ = 'users'
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    name = sqlalchemy.Column(sqlalchemy.String)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.datetime.now)
     telegram_id = sqlalchemy.Column(sqlalchemy.INTEGER)
     register = sqlalchemy.Column(sqlalchemy.BOOLEAN, default=True)
@@ -23,3 +24,5 @@ class User(SqlAlchemyBase):
     text_8 = sqlalchemy.Column(sqlalchemy.String)
     text_9 = sqlalchemy.Column(sqlalchemy.String)
     text_10 = sqlalchemy.Column(sqlalchemy.String)
+    last_result = sqlalchemy.Column(sqlalchemy.String)
+    replace_word = sqlalchemy.Column(sqlalchemy.String)
