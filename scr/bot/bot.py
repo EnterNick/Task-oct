@@ -43,6 +43,7 @@ class Form(StatesGroup):
 @dp.message(Command('отмена'))
 async def cancel_input(message: Message, state: FSMContext):
     await state.clear()
+    await message.answer('Отмена успешна!')
 
 
 def make_qr_code(text: str):
@@ -208,6 +209,7 @@ async def db_text_handler(callback: types.CallbackQuery, state: FSMContext):
     db_sess.commit()
     db_sess.close()
     await state.set_state(Form.save)
+    await callback.message.delete()
     await callback.message.answer('Введите текст или отправьте файл: ')
 
 
