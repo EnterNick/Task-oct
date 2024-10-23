@@ -42,16 +42,15 @@ def find(text: str, substring: str, register: bool = True, inaccuracies: bool = 
     substring = ' '.join(text_parser(substring.strip())[0])
     for n, sentense in enumerate(text):
         if ' ' in substring:
-            if (sim := similary((sentense, substring), analizator, register, inaccuracies)) > 1:
-                found_words.append((f'Предложение №{n + 1}: "{sentense}", оценка: {sim}', sim))
+            if (sim := similary((sentense, substring), analizator, register, inaccuracies)) > 1.5:
+                found_words.append((n + 1, sentense, sim))
         else:
             for one_word in sentense.split():
-                if (sim := similary((one_word, substring), analizator, register, inaccuracies)) > 1:
-                    found_words.append((f'Слово: "{one_word}", предложение №{n + 1}: "{deafult_text[n]}",'
-                                        f' оценка: {sim}', sim))
+                if (sim := similary((one_word, substring), analizator, register, inaccuracies)) > 1.5:
+                    found_words.append((one_word, n + 1, deafult_text[n], sim))
     if found_words:
-        found_words = [*map(lambda x: x[0], sorted(found_words, key=lambda x: x[1]))]
+        found_words = sorted(found_words, key=lambda x: x[-1])
         if len(found_words) > 15:
-            return found_words[-15:]
+            return found_words[-10:]
         return found_words
-    return ['Слов не найдено!']
+    return 'Слов не найдено!'

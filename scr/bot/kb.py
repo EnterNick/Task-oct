@@ -8,7 +8,10 @@ def start_keyboard():
             types.KeyboardButton(text="Настройки"),
             types.KeyboardButton(text="Задать текст"),
             types.KeyboardButton(text='Смотреть текст'),
-            types.KeyboardButton(text='Инфо')
+            types.KeyboardButton(text='Инфо'),
+            types.KeyboardButton(text='Заменить'),
+            types.KeyboardButton(text='Сделать QrCode'),
+            types.KeyboardButton(text='Анализ слова')
         ],
     ]
     keyboard = types.ReplyKeyboardMarkup(
